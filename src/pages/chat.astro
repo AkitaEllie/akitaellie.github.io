@@ -1,0 +1,214 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Chat / File Sharing">
+  <div class="max-w-6xl mx-auto px-4">
+    <h1 class="text-center text-3xl font-bold mb-6">Chat / File Sharing</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="border border-gray-300 p-4 rounded space-y-2">
+        <p class="text-sm font-semibold mb-3">Role</p>
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="radio"
+            id="rolei"
+            value="i"
+            name="arole"
+            class="w-4 h-4"
+          />
+          <span>Initiator</span>
+        </label>
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="radio"
+            id="rolea"
+            value="a"
+            name="arole"
+            class="w-4 h-4"
+          />
+          <span>Responder</span>
+        </label>
+      </div>
+
+      <div class="border border-gray-300 p-4 rounded">
+        <p class="text-sm font-semibold mb-2">Shared Secrets</p>
+        <input
+          id="uniqStr"
+          type="text"
+          placeholder="Enter shared secret"
+          class="w-full px-3 py-2 border border-gray-300 rounded"
+        />
+      </div>
+
+      <div class="border border-gray-300 p-4 rounded space-y-2">
+        <p class="text-sm font-semibold mb-2">Server</p>
+        <select
+          id="piping"
+          class="w-full px-3 py-2 border border-gray-300 rounded"
+        >
+          <option value="https://ppng.io/">https://ppng.io/</option>
+          <option value="https://piping.glitch.me/"
+            >https://piping.glitch.me/</option
+          >
+          <option value="https://piping-47q675ro2guv.runkit.sh/"
+            >https://piping-47q675ro2guv.runkit.sh/</option
+          >
+        </select>
+        <div class="flex gap-2">
+          <button
+            id="detailOps"
+            class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+          >
+            Debug
+          </button>
+          <a
+            href="https://github.com/privapps/share/"
+            target="_blank"
+            class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-center"
+          >
+            Help
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="details"
+      class="border border-gray-300 bg-gray-100 rounded p-5 mb-4"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm font-semibold mb-2">Local Offer</p>
+          <textarea
+            rows="4"
+            id="localOffer"
+            class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+          <button
+            id="localOfferSet"
+            class="mt-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 w-full md:w-auto md:float-right"
+          >
+            Create Offer
+          </button>
+        </div>
+
+        <div>
+          <p class="text-sm font-semibold mb-2">Remote Offer</p>
+          <textarea
+            id="remoteOffer"
+            rows="4"
+            placeholder="Paste remote SDP"
+            class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+          <button
+            id="remoteOfferGot"
+            class="mt-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 w-full md:w-auto md:float-right"
+          >
+            Answer It
+          </button>
+        </div>
+      </div>
+
+      <div class="clear-both">
+        <span id="debug"></span>
+      </div>
+    </div>
+
+    <div class="text-center text-sm mb-4">
+      <p>
+        If webrtc doesn't work, try
+        <a href="/chat" class="text-blue-600 hover:underline">plain piping</a> or
+        <a href="/zip" class="text-blue-600 hover:underline">Zip Extract</a>.
+      </p>
+    </div>
+
+    <p
+      id="pstatus"
+      class="text-center text-purple-600 font-bold uppercase mb-4"
+    >
+      disconnected
+    </p>
+
+    <div id="operation" class="border border-gray-300 rounded p-4 mb-4">
+      <div class="mb-6">
+        <p class="text-lg font-bold mb-3">Chat</p>
+        <form class="flex gap-2 mb-4">
+          <input
+            id="sendTxt"
+            type="text"
+            placeholder="Type your message"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded"
+          />
+          <button
+            type="submit"
+            class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Send
+          </button>
+        </form>
+        <div
+          id="chat"
+          class="max-h-[200px] overflow-y-auto space-y-2 border border-gray-200 rounded p-3 bg-gray-50"
+        >
+        </div>
+      </div>
+
+      <div>
+        <p class="text-lg font-bold mb-3">File Transfer</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-sm font-semibold mb-2">Send File</p>
+            <div class="flex gap-2 mb-2">
+              <input
+                type="file"
+                id="fileTransfer"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded"
+              />
+              <button
+                type="button"
+                class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+              >
+                Send
+              </button>
+            </div>
+            <progress value="0" id="sendFileProg" class="w-full h-6"></progress>
+          </div>
+
+          <div>
+            <p class="text-sm font-semibold mb-2">Receive File</p>
+            <div class="mb-2 min-h-[42px] flex items-center">
+              <a
+                href=""
+                id="file_download"
+                class="text-blue-600 hover:underline"></a>
+            </div>
+            <progress value="0" id="recFileProg" class="w-full h-6"></progress>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline src="/js/plainwebrtc.js"></script>
+  <script is:inline src="/js/production.min.js"></script>
+
+  <style>
+    .sent {
+      color: #6495ed;
+      float: right;
+      background-color: #f5f5dc;
+    }
+
+    pre {
+      border-bottom: 1px dotted;
+      margin: 0 0 2px 10px;
+    }
+
+    span.tm {
+      float: left;
+      font-size: 70%;
+      padding-right: 20px;
+      padding-top: 5px;
+    }
+  </style>
+</Layout>

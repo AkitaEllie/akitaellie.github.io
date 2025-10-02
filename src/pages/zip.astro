@@ -1,0 +1,163 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Zip Extract">
+  <div class="max-w-2xl mx-auto px-4">
+    <h1 class="text-3xl font-bold mb-2 text-center">Zip Extract</h1>
+    <p class="text-center text-gray-600 mb-8">
+      Multiple files in the zip file will be extracted one by one
+    </p>
+
+    <div class="border border-gray-300 rounded-lg p-6 bg-white shadow-sm">
+      <div class="space-y-4">
+        <div>
+          <label for="fileInput" class="block mb-2 text-sm font-semibold">
+            Select Zip File
+          </label>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".zip"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded cursor-pointer
+                   bg-white hover:bg-gray-50
+                   file:mr-3 file:py-1.5 file:px-3
+                   file:rounded file:border-0
+                   file:text-xs file:font-medium
+                   file:bg-blue-600 file:text-white
+                   file:cursor-pointer file:hover:bg-blue-700
+                   focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        <div>
+          <label for="passwordInput" class="block mb-2 text-sm font-semibold">
+            Password (if encrypted)
+          </label>
+          <input
+            type="password"
+            id="passwordInput"
+            value="1"
+            placeholder="Enter password"
+            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        <button
+          id="Extract"
+          class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 active:bg-blue-800
+                 transition-colors duration-150
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Extract Files
+        </button>
+      </div>
+
+      <div id="status" class="mt-4 text-sm text-center text-gray-600 hidden">
+      </div>
+    </div>
+
+    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <h3 class="text-sm font-semibold mb-2">How it works</h3>
+      <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+        <li>Select a ZIP file from your device</li>
+        <li>Enter the password if the ZIP is encrypted</li>
+        <li>Click "Extract Files" to download all files</li>
+        <li>Files will be downloaded individually to your device</li>
+      </ul>
+    </div>
+  </div>
+
+  <script
+    is:inline
+    src="https://rf00.github.io/minizip-asm.js/lib/minizip-asm.min.js"></script>
+
+  <script is:inline>
+    let out_files = [];
+
+    async function handleFile() {
+      const password = document.getElementById("passwordInput").value;
+      const file = document.getElementById("fileInput").files[0];
+      const statusEl = document.getElementById("status");
+
+      if (!file) {
+        statusEl.textContent = "Please select a file first";
+        statusEl.classList.remove("hidden", "text-gray-600", "text-green-600");
+        statusEl.classList.add("text-red-600");
+        return;
+      }
+
+      statusEl.textContent = "Extracting...";
+      statusEl.classList.remove("hidden", "text-red-600", "text-green-600");
+      statusEl.classList.add("text-gray-600");
+
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          console.log(file.name);
+          if (file.name.endsWith(".zip")) {
+            try {
+              var zip = new Minizip(new Uint8Array(event.target.result));
+
+              zip
+                .list({
+                  encoding: "buffer",
+                })
+                .forEach(function (o) {
+                  const uint8Array = zip.extract(o.filepath, {
+                    password: password,
+                  });
+                  out_files.push([
+                    new TextDecoder().decode(o.filepath),
+                    uint8Array,
+                  ]);
+                });
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          } else {
+            reject(new Error("File is not a ZIP archive"));
+          }
+        };
+        reader.onerror = function (error) {
+          reject(error);
+        };
+        reader.readAsArrayBuffer(file);
+      })
+        .then(() => {
+          out_files.forEach((f) => {
+            saveUint8ArrayToFile(f[1], f[0]);
+          });
+          statusEl.textContent = `Successfully extracted ${out_files.length} file(s)`;
+          statusEl.classList.remove("text-gray-600", "text-red-600");
+          statusEl.classList.add("text-green-600");
+          out_files = [];
+        })
+        .catch((error) => {
+          statusEl.textContent = `Error: ${error.message}`;
+          statusEl.classList.remove("text-gray-600", "text-green-600");
+          statusEl.classList.add("text-red-600");
+          out_files = [];
+        });
+    }
+
+    function saveUint8ArrayToFile(uint8Array, filename) {
+      const blob = new Blob([uint8Array], {
+        type: "application/octet-stream",
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "file.bin";
+
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("Extract").addEventListener("click", handleFile);
+  </script>
+</Layout>
