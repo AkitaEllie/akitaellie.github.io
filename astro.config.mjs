@@ -1,17 +1,13 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
-import cloudflare from "@astrojs/cloudflare";
+import vercel from "@astrojs/vercel";
 import tailwind from "@astrojs/tailwind";
 
 // https://astro.build/config
 export default defineConfig({
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
+  output: 'server', // or 'hybrid' or 'static'
+  adapter: vercel(),
 
-    imageService: "cloudflare",
-  }),
   integrations: [tailwind()],
 });
